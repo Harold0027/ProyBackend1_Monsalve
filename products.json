@@ -1,0 +1,28 @@
+[
+  {
+    "id": 2,
+    "title": "Teclado mecánico",
+    "description": "RGB con switches rojos",
+    "code": "KBD001",
+    "price": 250,
+    "status": true,
+    "stock": 15,
+    "category": "periféricos",
+    "thumbnails": [
+      "teclado.jpg"
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Teclado mecánico",
+    "description": "RGB con switches rojos",
+    "code": "KBD001",
+    "price": 250,
+    "status": true,
+    "stock": 15,
+    "category": "periféricos",
+    "thumbnails": [
+      "teclado.jpg"
+    ]
+  }
+]
