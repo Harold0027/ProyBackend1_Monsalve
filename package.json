@@ -1,12 +1,13 @@
 {
   "dependencies": {
     "express": "^5.1.0",
-    "node": "^24.2.0"
+    "express-handlebars": "^8.0.3",
+    "node": "^24.2.0",
+    "socket.io": "^4.8.1"
   },
   "name": "proybackend1",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

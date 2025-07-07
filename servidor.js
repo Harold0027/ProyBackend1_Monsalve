@@ -1,111 +1,55 @@
 const express = require('express');
-const ProductsManager = require('./ProductsManager');
-const CartManager = require('./CartManager');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const exphbs = require('express-handlebars');
+const path = require('path');
+const productsRouter = require('./routes/products.routes');
+const cartsRouter = require('./routes/carts.routes');
+
+
+const ProductsManager = require('./managers/ProductsManager');
+const productManager = new ProductsManager('./data/products.json');
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer);
+
 const PORT = 8080;
 
+// Handlebars config
+app.engine('handlebars', exphbs.engine());
+app.set('view engine', 'handlebars');
+app.set('views', path.join(__dirname, 'views'));
+
+// Middlewares
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-const productManager = new ProductsManager('./products.json');
-const cartManager = new CartManager('./cart.json');
+// Rutas
+const viewsRouter = require('./routes/views.routes');
+app.use('/', viewsRouter);
+app.use('/api/products', productsRouter);
+app.use('/api/carts', cartsRouter);
 
-//RUTAS PRODUCTS
-app.get('/products', async(req, res)=>{
-    try {
-        const products = await productManager.getProducts()
-        res.json({products})
-    } catch (error) {
-        res.status(500).json({error: 'Error interno del servidor'})
-        console.error('Error al obtener producto:', error)
-    }
-})
 
-app.get('/products/:pid', async(req,res)=>{
-    try {
-        const product = await productManager.getProductById(req.params.pid)
-        if (!product) {
-            return res.status(404).json({ error: 'Producto no encontrado' });
-        }
-        res.json(product)
-    } catch (error) {
-        console.error('Error al obtener producto:', error)
-        res.status(500).json({error: 'Error interno del servidor'})
-    }
-})
+// WebSockets
+io.on('connection', async (socket) => {
+    console.log('🟢 Cliente conectado');
 
-app.post('/products', async(req,res)=>{
-    try {
-        const product = await productManager.addProduct(req.body)
-        res.status(201).json(product)
-    } catch (error) {
-        res.status(500).json({error: 'Error interno del servidor'})
-        console.error("Error al añadir el producto")
-    }
-})
+    socket.emit('products', await productManager.getProducts());
 
-app.put('/products/:pid', async(req,res)=>{
-    try {
-        const updatedProduct = await productManager.updateProduct(req.params.pid, req.body);
-if (!updatedProduct) {
-    return res.status(500).json({ error: 'Producto no encontrado' });
-}
-res.json({ message: 'Producto actualizado', product: updatedProduct });
-        
-    } catch (error) {
-        console.error('Error al actualizar el producto:', error)
-        res.status(500).json({error: 'Error interno del servidor'})
-    }
-})
-app.delete('/products/:pid', async(req,res)=>{
-    try {
-        const deleted = await productManager.deleteProduct(req.params.pid);
-    if (!deleted) {
-        return res.status(500).json({ error: 'Producto no encontrado' });
-    }
-    res.json({ message: 'Producto eliminado con éxito' });  
-    } catch (error) {
-        console.error('Error al eliminar el producto:', error)
-        res.status(500).json({error: 'Error interno del servidor'})
-    }
-})
+    socket.on('newProduct', async (product) => {
+        await productManager.addProduct(product);
+        io.emit('products', await productManager.getProducts());
+    });
 
-//RUTAS CART
-app.post('/api/carts', async (req, res) => {
-    try {
-        const newCart = await cartManager.addCart();
-        res.status(201).json(newCart);
-    } catch (error) {
-        console.error('Error al crear carrito:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
-    }
+    socket.on('deleteProduct', async (id) => {
+        await productManager.deleteProduct(id);
+        io.emit('products', await productManager.getProducts());
+    });
 });
 
-app.get('/api/carts/:cid', async (req, res) => {
-    try {
-        const cart = await cartManager.getCartById(req.params.cid);
-        if (!cart) {
-            return res.status(404).json({ error: 'Carrito no encontrado' });
-        }
-        res.json(cart.products);
-    } catch (error) {
-        console.error('Error al obtener carrito:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
-    }
+httpServer.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
-
-app.post('/api/carts/:cid/product/:pid', async (req, res) => {
-    try {
-        const updatedCart = await cartManager.addProductToCart(req.params.cid, req.params.pid);
-        if (!updatedCart) {
-            return res.status(404).json({ error: 'Carrito no encontrado' });
-        }
-        res.json({ message: 'Producto agregado al carrito', cart: updatedCart });
-    } catch (error) {
-        console.error('Error al agregar producto al carrito:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
-    }
-});
-app.listen(PORT, ()=>{
-    console.log(`El servidor esta corriendo en: http://localhost:${PORT}`)
-})

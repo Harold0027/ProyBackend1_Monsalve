@@ -13,16 +13,14 @@
     ]
   },
   {
-    "id": 2,
-    "title": "Teclado mecánico",
-    "description": "RGB con switches rojos",
-    "code": "KBD001",
-    "price": 250,
-    "status": true,
-    "stock": 15,
-    "category": "periféricos",
-    "thumbnails": [
-      "teclado.jpg"
-    ]
+    "id": 3,
+    "title": "Mouse",
+    "description": "MOuseasa",
+    "code": "21",
+    "price": 200,
+    "stock": "10",
+    "status": "disponible",
+    "category": "general",
+    "thumbnails": []
   }
 ]
